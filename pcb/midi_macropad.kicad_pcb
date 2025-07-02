@@ -10675,89 +10675,16 @@
 			)
 		)
 	)
-	(gr_arc
-		(start 38.1 140.49375)
-		(mid 34.732404 139.098846)
-		(end 33.3375 135.73125)
+	(gr_rect
+		(start 33.3375 78.6)
+		(end 238.1 140.49375)
 		(stroke
 			(width 0.05)
 			(type default)
 		)
+		(fill no)
 		(layer "Edge.Cuts")
-		(uuid "152de41a-e3ae-45a6-b47b-b0f4d6684a42")
-	)
-	(gr_arc
-		(start 33.3375 83.34375)
-		(mid 34.732404 79.976154)
-		(end 38.1 78.58125)
-		(stroke
-			(width 0.05)
-			(type default)
-		)
-		(layer "Edge.Cuts")
-		(uuid "25a1e800-c497-4438-92fb-7d44486c69ec")
-	)
-	(gr_line
-		(start 38.1 78.58125)
-		(end 233.3625 78.58125)
-		(stroke
-			(width 0.05)
-			(type default)
-		)
-		(layer "Edge.Cuts")
-		(uuid "349f77e3-00b0-4efc-b54d-3dc979ccb909")
-	)
-	(gr_line
-		(start 233.3625 140.49375)
-		(end 38.1 140.49375)
-		(stroke
-			(width 0.05)
-			(type default)
-		)
-		(layer "Edge.Cuts")
-		(uuid "50b13e49-d28a-4d4b-ab6f-64a9558af0ae")
-	)
-	(gr_line
-		(start 33.3375 135.73125)
-		(end 33.3375 83.34375)
-		(stroke
-			(width 0.05)
-			(type default)
-		)
-		(layer "Edge.Cuts")
-		(uuid "5b731ddb-48ad-4778-939e-ad17726ab42c")
-	)
-	(gr_arc
-		(start 233.3625 78.58125)
-		(mid 236.730096 79.976154)
-		(end 238.125 83.34375)
-		(stroke
-			(width 0.05)
-			(type default)
-		)
-		(layer "Edge.Cuts")
-		(uuid "97ffbbf3-8a95-4f7a-996a-c70f2be32def")
-	)
-	(gr_line
-		(start 238.125 83.34375)
-		(end 238.125 135.73125)
-		(stroke
-			(width 0.05)
-			(type default)
-		)
-		(layer "Edge.Cuts")
-		(uuid "9ea3386e-eda5-4985-aeef-877b2cce5516")
-	)
-	(gr_arc
-		(start 238.125 135.73125)
-		(mid 236.730096 139.098846)
-		(end 233.3625 140.49375)
-		(stroke
-			(width 0.05)
-			(type default)
-		)
-		(layer "Edge.Cuts")
-		(uuid "be16b9ae-f126-4d68-a38a-27bee9160e8a")
+		(uuid "6ba86c32-0978-433e-aff8-7c7367ec8402")
 	)
 	(gr_text "A MIDI Keyboard Hackpad"
 		(at 38.1 85.55 0)
