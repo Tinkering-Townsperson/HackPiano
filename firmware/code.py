@@ -66,7 +66,7 @@ display.root_group = main_screen
 ######################
 
 class MidiKeyboard(KMKKeyboard):
-	def __init__(self, screen: displayio.Group):
+	def __init__(self, screen: displayio.Group, cc_default: int = 0, cc_off: int = 0, cc_on: int = 127, cc_code: int = 64):
 		super().__init__()
 		self.row_pins = (board.D6, board.D7, board.D8, board.D10)
 		self.col_pins = (board.D9, board.D0, board.D1, board.D2)
@@ -101,7 +101,8 @@ class MidiKeyboard(KMKKeyboard):
 		}
 
 		self.transpose = 0
-		self.sustain = False
+		self.control = cc_default
+		self.controlchange = cc_code
 		self.active_midi_notes = list()
 		self.extensions.append(Button([button_pin]))
 		self.screen = screen
@@ -124,14 +125,14 @@ class MidiKeyboard(KMKKeyboard):
 		)
 		self.screen.append(self.transposition)
 
-		self.sustaining = label.Label(
+		self.control_status = label.Label(
 			terminalio.FONT,
 			text = "",
 			color = 0xFFFFFF,
 			x = 72,
 			y = (HEIGHT // 3) * 2 - 1
 		)
-		self.screen.append(self.sustaining)
+		self.screen.append(self.control_status)
 
 	def process_key(self, key):
 		if 0 <= key.key_number <= 11:
@@ -169,7 +170,7 @@ class MidiKeyboard(KMKKeyboard):
 	def update_oled(self):
 		self.currently_playing.text = self._get_note_name(self.active_midi_notes[-1]) if len(self.active_midi_notes) > 0 else ""
 		self.transposition.text = str(self.transpose) if self.transpose < 0 else f"+{self.transpose}" if self.transpose > 0 else ""
-		self.sustaining.text = "SUSTAIN" if self.sustain else ""
+		self.control_status.text = f"CC={self.control}"
 
 	def _get_note_name(self, note_number: int) -> str:
 		"""Convert a MIDI note number to its corresponding note name.
