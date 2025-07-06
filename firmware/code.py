@@ -27,7 +27,7 @@ from adafruit_display_text import label
 
 # Keyboard/KMK stuff
 from kmk.kmk_keyboard import KMKKeyboard  # type: ignore
-from kmk.keys import KC  # type: ignore
+from kmk.keys import KC, Key  # type: ignore
 from kmk.scanners import DiodeOrientation  # type: ignore
 from kmk.extensions.button import Button  # type: ignore
 
@@ -134,7 +134,7 @@ class MidiKeyboard(KMKKeyboard):
 		)
 		self.screen.append(self.control_status)
 
-	def process_key(self, key):
+	def process_key(self, key: Key) -> None:
 		if 0 <= key.key_number <= 11:
 			midi_note = self.midi_note_map[key.key_number]
 
@@ -165,9 +165,9 @@ class MidiKeyboard(KMKKeyboard):
 
 		# TODO: Handle push button = toggle sustain (MIDI CC 64)
 
-		return super().process_key(key)
+		super().process_key(key)
+	def update_oled(self) -> None:
 
-	def update_oled(self):
 		self.currently_playing.text = self._get_note_name(self.active_midi_notes[-1]) if len(self.active_midi_notes) > 0 else ""
 		self.transposition.text = str(self.transpose) if self.transpose < 0 else f"+{self.transpose}" if self.transpose > 0 else ""
 		self.control_status.text = f"CC={self.control}"
