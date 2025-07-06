@@ -7,8 +7,9 @@ The HackPiano is a custom MIDI keyboard made by AfterNoon PM as his HackPad proj
 # IMPORTS #
 ###########
 
-# Board stuff
+# General stuff
 import board  # type: ignore
+import time
 
 # MIDI stuff
 import usb_midi  # type: ignore
@@ -21,6 +22,8 @@ from adafruit_midi.control_change import ControlChange  # noqa
 import busio  # type: ignore
 import displayio  # type: ignore
 import adafruit_displayio_ssd1306
+import terminalio  # type: ignore
+from adafruit_display_text import label
 
 # Keyboard/KMK stuff
 from kmk.kmk_keyboard import KMKKeyboard  # type: ignore
@@ -34,7 +37,11 @@ from kmk.extensions.button import Button  # type: ignore
 #########
 
 # Constants
+__version__ = "1.0.0"
 VELOCITY = 127
+WIDTH = 128
+HEIGHT = 32
+BORDER = 1
 
 # MIDI setup
 midi = adafruit_midi.MIDI(usb_midi.ports[0], out_channel=0)
@@ -50,13 +57,16 @@ displayio.release_displays()
 display_bus = displayio.I2CDisplay(i2c, device_address=0x3C)
 display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=32)
 
+main_screen = displayio.Group()
+display.root_group = main_screen
+
 
 ######################
 # MIDIKEYBOARD CLASS #
 ######################
 
 class MidiKeyboard(KMKKeyboard):
-	def __init__(self):
+	def __init__(self, screen: displayio.Group):
 		super().__init__()
 		self.row_pins = (board.D6, board.D7, board.D8, board.D10)
 		self.col_pins = (board.D9, board.D0, board.D1, board.D2)
@@ -92,8 +102,36 @@ class MidiKeyboard(KMKKeyboard):
 
 		self.transpose = 0
 		self.sustain = False
-		self.active_midi_notes = set()
+		self.active_midi_notes = list()
 		self.extensions.append(Button([button_pin]))
+		self.screen = screen
+
+		self.currently_playing = label.Label(
+			terminalio.FONT,
+			text = "",
+			color = 0xFFFFFF,
+			x = 3,
+			y = HEIGHT // 2 - 1
+		)
+		self.screen.append(self.currently_playing)
+
+		self.transposition = label.Label(
+			terminalio.FONT,
+			text = "",
+			color = 0xFFFFFF,
+			x = 72,
+			y = HEIGHT // 3 - 1
+		)
+		self.screen.append(self.transposition)
+
+		self.sustaining = label.Label(
+			terminalio.FONT,
+			text = "",
+			color = 0xFFFFFF,
+			x = 72,
+			y = (HEIGHT // 3) * 2 - 1
+		)
+		self.screen.append(self.sustaining)
 
 	def process_key(self, key):
 		if 0 <= key.key_number <= 11:
@@ -102,21 +140,14 @@ class MidiKeyboard(KMKKeyboard):
 			if key.pressed:
 				if midi_note not in self.active_midi_notes:
 					midi.send(NoteOn(midi_note + self.transpose, VELOCITY))
-					self.active_midi_notes.add(midi_note + self.transpose)
-					print(
-						f"MIDI Note On: {midi_note + self.transpose} " +
-						f"({self._get_note_name(midi_note + self.transpose)})"
-					)
-					# TODO: Update OLED with note playing
+					self.active_midi_notes.append(midi_note + self.transpose)
+
 			else:
 				if midi_note in self.active_midi_notes:
 					midi.send(NoteOff(midi_note + self.transpose, 0))
 					self.active_midi_notes.remove(midi_note + self.transpose)
-					print(
-						f"MIDI Note Off: {midi_note + self.transpose} " +
-						f"({self._get_note_name(midi_note + self.transpose)})"
-					)
-					# TODO: Update OLED (clear note display)
+
+			self.update_oled()
 
 		elif 12 <= key.key_number <= 15:
 			if key.pressed:
@@ -126,20 +157,19 @@ class MidiKeyboard(KMKKeyboard):
 					1 if key.key_number == 13 else \
 					12 if key.key_number == 14 else \
 					-1 if key.key_number == 15 else 0
-				if self.transpose < 0 or self.transpose > 0:
-					# TODO: Update OLED with transposition
-					...
-				else:
-					# TODO: Clear transposition on OLED
-					...
-
 			else:
 				print(f"Control Key SW{key.key_number + 1} Released")
 
+			self.update_oled()
+
 		# TODO: Handle push button = toggle sustain (MIDI CC 64)
-		# TODO: Update OLED with sustain status
 
 		return super().process_key(key)
+
+	def update_oled(self):
+		self.currently_playing.text = self._get_note_name(self.active_midi_notes[-1]) if len(self.active_midi_notes) > 0 else ""
+		self.transposition.text = str(self.transpose) if self.transpose < 0 else f"+{self.transpose}" if self.transpose > 0 else ""
+		self.sustaining.text = "SUSTAIN" if self.sustain else ""
 
 	def _get_note_name(self, note_number: int) -> str:
 		"""Convert a MIDI note number to its corresponding note name.
@@ -157,11 +187,48 @@ class MidiKeyboard(KMKKeyboard):
 		return f"{note_names[note_in_octave]}{octave}"
 
 
+######################
+# OLED SCREEN SPLASH #
+######################
+def outline_screen(screen: displayio.Group) -> None:
+	color_bitmap = displayio.Bitmap(WIDTH, HEIGHT, 1)
+	color_palette = displayio.Palette(1)
+	color_palette[0] = 0xFFFFFF
+
+	bg_sprite = displayio.TileGrid(color_bitmap, pixel_shader=color_palette, x=0, y=0)
+	screen.append(bg_sprite)
+
+	inner_bitmap = displayio.Bitmap(WIDTH - BORDER * 2, HEIGHT - BORDER * 2, 1)
+	inner_palette = displayio.Palette(1)
+	inner_palette[0] = 0x000000
+	inner_sprite = displayio.TileGrid(inner_bitmap, pixel_shader=inner_palette, x=BORDER, y=BORDER)
+	screen.append(inner_sprite)
+
+
+def splash_screen(screen: displayio.Group, text: str) -> None:
+	text_area = label.Label(terminalio.FONT, text="", color=0xFFFFFF, x=32, y=HEIGHT // 2 - 1)
+	screen.append(text_area)
+
+	for i in range(len(text) + 1):
+		text_area.text = text[0:i]
+		time.sleep(0.25)
+
+	time.sleep(2)
+
+	for i in range(len(text) + 1):
+		text_area.text = " " * i + text[i:len(text)]
+		time.sleep(0.25)
+
+	screen.remove(text_area)
+
+
 #############
 # MAIN LOOP #
 #############
 
-keyboard = MidiKeyboard()
+keyboard = MidiKeyboard(screen=main_screen)
 
 if __name__ == '__main__':
+	outline_screen(screen=main_screen)
+	splash_screen(screen=main_screen, text=f"HackPiano v{__version__[0]}")
 	keyboard.go()
