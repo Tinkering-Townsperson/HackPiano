@@ -29,7 +29,6 @@ from adafruit_display_text import label
 from kmk.kmk_keyboard import KMKKeyboard  # type: ignore
 from kmk.keys import KC, Key  # type: ignore
 from kmk.scanners import DiodeOrientation  # type: ignore
-from kmk.extensions.button import Button  # type: ignore
 
 
 #########
@@ -112,7 +111,6 @@ class MidiKeyboard(KMKKeyboard):
 		self.transpose = 0
 		self.control = cc_default
 		self.active_midi_notes = list()
-		self.extensions.append(Button([button_pin]))
 		self.screen = screen
 
 		self.controlchange = cc_code
