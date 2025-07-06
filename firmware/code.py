@@ -111,10 +111,13 @@ class MidiKeyboard(KMKKeyboard):
 
 		self.transpose = 0
 		self.control = cc_default
-		self.controlchange = cc_code
 		self.active_midi_notes = list()
 		self.extensions.append(Button([button_pin]))
 		self.screen = screen
+
+		self.controlchange = cc_code
+		self.cc_on = cc_on
+		self.cc_off = cc_off
 
 		self.currently_playing = label.Label(
 			terminalio.FONT,
